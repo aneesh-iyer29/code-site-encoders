@@ -45,6 +45,11 @@
     <input type="number" id="value" value="250" required>
   </label>
 
+  <label>
+    Reveal Keyword (optional):
+    <input type="text" id="revealKeyword">
+  </label>
+
   <button type="submit">Generate</button>
 </form>
 
@@ -63,6 +68,7 @@
 <button onclick="downloadLatex()">Download LaTeX</button>
 </div>
 
+<script src="embed-output.js"></script>
 <script>
 function checkerboardAlphabet(keyword){
     keyword = keyword.toLowerCase().replace(/j/g,"i");
@@ -122,7 +128,7 @@ function checkerboardEncoder(hkey, vkey, alph, s, bs){
     return result.trim();
 }
 
-function generateCheckerboardCipher(){
+async function generateCheckerboardCipher(){
     const qtext = document.getElementById("qtext").value;
     const plaintext = document.getElementById("plaintext").value;
     const hkey = document.getElementById("hkey").value;
@@ -130,6 +136,7 @@ function generateCheckerboardCipher(){
     const poly = document.getElementById("polybius").value;
     const bs = parseInt(document.getElementById("bs").value);
     const value = document.getElementById("value").value;
+    const revealKeyword = document.getElementById("revealKeyword").value;
 
     const alph = checkerboardAlphabet(poly);
     const encoded = checkerboardEncoder(hkey,vkey,alph,plaintext,bs);
@@ -158,7 +165,12 @@ function generateCheckerboardCipher(){
     latex.push("\\vfill \n");
     latex.push("\\uplevel{\\hrulefill}");
 
-    document.getElementById("latexOutput").value = latex.join("\n");
+    await setLatexOrEmbedOutput("latexOutput", revealKeyword, "checkerboard", {
+        cipherType: "Checkerboard",
+        questionText: questionTextWithValue(value, qtext),
+        cipherText: encoded,
+        correctAnswer: lettersOnlyAnswer(plaintext)
+    }, latex.join("\n"));
 }
 
 function downloadLatex(){

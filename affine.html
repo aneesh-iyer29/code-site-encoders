@@ -38,6 +38,10 @@
     Hint (optional):
     <input type="text" id="hint">
   </label>
+  <label>
+    Reveal Keyword (optional):
+    <input type="text" id="revealKeyword">
+  </label>
   <button type="submit">Generate</button>
 </form>
 
@@ -56,6 +60,7 @@
   <button onclick="downloadLatex()">Download LaTeX</button>
 </div>
 
+<script src="embed-output.js"></script>
 <script>
 function affineEncode(s, a, b, bs){
   s = s.toUpperCase().replace(/[^A-Z]/g,"");
@@ -92,7 +97,7 @@ function affineFormatSentence(s){
   return formatted;
 }
 
-function generateAffineCipher(){
+async function generateAffineCipher(){
   const qtext = document.getElementById("qtext").value;
   const plaintext = document.getElementById("plaintext").value;
   const a = parseInt(document.getElementById("a").value);
@@ -100,6 +105,7 @@ function generateAffineCipher(){
   const bs = parseInt(document.getElementById("bs").value);
   const value = document.getElementById("value").value;
   const hint = document.getElementById("hint").value;
+  const revealKeyword = document.getElementById("revealKeyword").value;
 
   const encoded = affineEncode(plaintext, a, b, bs);
   const formatted = affineFormatSentence(encoded);
@@ -119,7 +125,16 @@ function generateAffineCipher(){
   latex.push("\\end{verbatim}}");
   latex.push("\\vfill \\uplevel{\\hrulefill}");
 
-  document.getElementById("latexOutput").value = latex.join("\n");
+  const embedQuestion = hint
+    ? `${qtext} You are told that ${hint}`
+    : `Decrypt this quote which was encoded using the Affine cipher with a=${a}, b=${b}.`;
+  await setLatexOrEmbedOutput("latexOutput", revealKeyword, "affine", {
+    cipherType: "Affine",
+    aristoType: "K2",
+    questionText: questionTextWithValue(value, embedQuestion),
+    cipherText: formatted,
+    correctAnswer: lettersOnlyAnswer(plaintext)
+  }, latex.join("\n"));
 }
 
 function downloadLatex(){

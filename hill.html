@@ -30,6 +30,11 @@
     <input type="number" id="value" value="250" required>
   </label>
 
+  <label>
+    Reveal Keyword (optional):
+    <input type="text" id="revealKeyword">
+  </label>
+
   <button type="submit">Generate</button>
 </form>
 
@@ -48,6 +53,7 @@
   <button onclick="downloadLatex()">Download LaTeX</button>
 </div>
 
+<script src="embed-output.js"></script>
 <script>
 function hillMatrix(keyword) {
   let b = Array.from(keyword.toUpperCase()).map(c => c.charCodeAt(0)-65);
@@ -107,11 +113,12 @@ function hillEncoder(text,keyword){
   return e.join("");
 }
 
-function generateHillCipher(){
+async function generateHillCipher(){
   const qtext = document.getElementById("qtext").value;
   const plaintext = document.getElementById("plaintext").value;
   const keyword = document.getElementById("keyword").value;
   const value = document.getElementById("value").value;
+  const revealKeyword = document.getElementById("revealKeyword").value;
 
   const matrix = hillMatrix(keyword);
   const encoded = hillEncoder(plaintext,keyword);
@@ -127,7 +134,13 @@ function generateHillCipher(){
   latex.push(encoded);
   latex.push("\\end{verbatim}}");
   latex.push("\\vfill \n\\uplevel{\\hrulefill}");
-  document.getElementById("latexOutput").value = latex.join("\n");
+  await setLatexOrEmbedOutput("latexOutput", revealKeyword, "hill", {
+    cipherType: "Hill",
+    aristoType: "K2",
+    questionText: questionTextWithValue(value, qtext),
+    cipherText: encoded,
+    correctAnswer: lettersOnlyAnswer(plaintext)
+  }, latex.join("\n"));
 }
 
 function downloadLatex(){

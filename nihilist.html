@@ -17,6 +17,7 @@
   <label>Block Size:<input type="number" id="bs" value="3" required></label>
   <label>Value:<input type="number" id="value" value="250" required></label>
   <label>Crib/Hint (optional):<input type="text" id="hint"></label>
+  <label>Reveal Keyword (optional):<input type="text" id="revealKeyword"></label>
   <button type="submit">Generate</button>
 </form>
 
@@ -35,6 +36,7 @@
 <button onclick="downloadLatex()">Download LaTeX</button>
 </div>
 
+<script src="embed-output.js"></script>
 <script>
 function createNihilistAlphabet(keyword){
   keyword = keyword.toLowerCase().replace('j','i');
@@ -101,7 +103,7 @@ function nihilistEncode(text, key, poly, bs) {
 
 
 
-function generateNihilistCipher(){
+async function generateNihilistCipher(){
   const qtext = document.getElementById("qtext").value;
   const plaintext = document.getElementById("plaintext").value;
   const keyword = document.getElementById("keyword").value;
@@ -109,6 +111,7 @@ function generateNihilistCipher(){
   const bs = parseInt(document.getElementById("bs").value);
   const value = document.getElementById("value").value;
   const hint = document.getElementById("hint").value;
+  const revealKeyword = document.getElementById("revealKeyword").value;
 
   const encoded = nihilistEncode(plaintext,keyword,poly,bs);
 
@@ -138,7 +141,12 @@ function generateNihilistCipher(){
   latex.push("\\end{tabular} \n");
   latex.push("\\vfill \\uplevel{\\hrulefill}");
 
-  document.getElementById("latexOutput").value = latex.join("\n");
+  await setLatexOrEmbedOutput("latexOutput", revealKeyword, "nihilist", {
+    cipherType: "Nihilist",
+    questionText: questionTextWithValue(value, qtext),
+    cipherText: encoded,
+    correctAnswer: lettersOnlyAnswer(plaintext)
+  }, latex.join("\n"));
 }
 
 function downloadLatex(){

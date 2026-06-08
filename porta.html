@@ -16,6 +16,7 @@
   <label>Block Size:<input type="number" id="bs" value="5" required></label>
   <label>Value:<input type="number" id="value" value="250" required></label>
   <label>Crib/Hint (optional):<input type="text" id="hint"></label>
+  <label>Reveal Keyword (optional):<input type="text" id="revealKeyword"></label>
   <button type="submit">Generate</button>
 </form>
 
@@ -34,6 +35,7 @@
 <button onclick="downloadLatex()">Download LaTeX</button>
 </div>
 
+<script src="embed-output.js"></script>
 <script>
 function portaEncode(text, keyword, bs){
     text = text.toUpperCase().replace(/[^A-Z]/g,"");
@@ -73,13 +75,14 @@ function portaEncode(text, keyword, bs){
     return result.trim();
 }
 
-function generatePortaCipher(){
+async function generatePortaCipher(){
     const qtext = document.getElementById("qtext").value;
     const plaintext = document.getElementById("plaintext").value;
     const keyword = document.getElementById("keyword").value;
     const bs = parseInt(document.getElementById("bs").value);
     const value = document.getElementById("value").value;
     const hint = document.getElementById("hint").value;
+    const revealKeyword = document.getElementById("revealKeyword").value;
 
     const encoded = portaEncode(plaintext, keyword, bs);
 
@@ -95,7 +98,13 @@ function generatePortaCipher(){
     latex.push("\\vfill");
     latex.push("\\uplevel{\\hrulefill}");
 
-    document.getElementById("latexOutput").value = latex.join("\n");
+    await setLatexOrEmbedOutput("latexOutput", revealKeyword, "porta", {
+        cipherType: "Porta",
+        aristoType: "K2",
+        questionText: questionTextWithValue(value, qtext),
+        cipherText: encoded,
+        correctAnswer: lettersOnlyAnswer(plaintext)
+    }, latex.join("\n"));
 }
 
 function downloadLatex(){

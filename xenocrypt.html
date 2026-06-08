@@ -21,6 +21,7 @@
   </label>
   <label>Alphabet (blank, K1, K2, K3):<input type="text" id="alph"></label>
   <label>Keyword:<input type="text" id="keyword"></label>
+  <label>Reveal Keyword (optional):<input type="text" id="revealKeyword"></label>
   <label>Shift:<input type="number" id="shift" value="0"></label>
   <label>Extract keyword?<input type="checkbox" id="extract"></label>
   <button type="submit">Generate</button>
@@ -43,6 +44,7 @@
 <button onclick="downloadLatex()">Download LaTeX</button>
 </div>
 
+<script src="embed-output.js"></script>
 <script>
 const fullAlphabet = "ABCDEFGHIJKLMNÑOPQRSTUVWXYZ";
 
@@ -160,21 +162,28 @@ function monoalphCreator(qtext,s,value,type,alph,keyword,shift,extract){
   return v;
 }
 
-function generateXenoCipher() {
+async function generateXenoCipher() {
   const qtext = document.getElementById('qtext').value;
   const s = document.getElementById('plaintext').value;
   const value = document.getElementById('value').value;
   const type = document.getElementById('type').value;
   const alph = document.getElementById('alph').value;
   const keyword = document.getElementById('keyword').value;
+  const revealKeyword = document.getElementById('revealKeyword').value;
   const shift = parseInt(document.getElementById('shift').value)||0;
   const extract = document.getElementById('extract').checked;
 
   const latex = monoalphCreator(qtext,s,value,type,alph,keyword,shift,extract);
-  document.getElementById('latexOutput').value = latex;
 
   let replaced = xenoLetterReplacement(s, keyword, shift, alph);
   let formatted = type==="Aristocrat"?aristoFormatSentence(replaced):patFormatSentence(replaced.replace(/[^A-ZÑ]/g,""));
+  await setLatexOrEmbedOutput("latexOutput", revealKeyword, "aristocrat", {
+    cipherType: "Aristocrat",
+    aristoType: alph || "Normal",
+    questionText: questionTextWithValue(value, qtext),
+    cipherText: formatted,
+    correctAnswer: type === "Aristocrat" ? s.toUpperCase() : lettersOnlyAnswer(s, "Ñ")
+  }, latex);
   document.getElementById('cipherOutput').innerHTML = "<pre>"+formatted+"</pre>";
   document.getElementById('plainOutput').innerHTML = "<pre>"+replaced.replace(/[^A-ZÑ]/g," ")+"</pre>";
 

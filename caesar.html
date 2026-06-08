@@ -28,6 +28,11 @@
       <input type="number" id="shift" value="3">
     </label>
 
+    <label>
+      Reveal Keyword (optional):
+      <input type="text" id="revealKeyword">
+    </label>
+
     <button type="submit">Generate</button>
   </form>
 
@@ -47,6 +52,7 @@
     <button onclick="downloadLatex()">Download LaTeX</button>
   </div>
 
+  <script src="embed-output.js"></script>
   <script>
     function caesarEncoder(s, shift, bs) {
       s = s.toUpperCase().replace(/[^A-Z]/g, "");
@@ -95,17 +101,24 @@
       return result.join("\n");
     }
 
-    function generateCipher() {
+    async function generateCipher() {
       const qtext = document.getElementById('qtext').value;
       const s = document.getElementById('plaintext').value;
       const value = document.getElementById('value').value;
       const shift = parseInt(document.getElementById('shift').value) || 0;
+      const revealKeyword = document.getElementById('revealKeyword').value;
 
       const latex = caesarFormatter(qtext, s, shift, value);
-      document.getElementById('latexOutput').value = latex;
 
       const encoded = caesarEncoder(s, shift, 5);
       const formatted = caesarFormatSentence(encoded);
+      await setLatexOrEmbedOutput("latexOutput", revealKeyword, "aristocrat", {
+        cipherType: "Aristocrat",
+        aristoType: "Caesar",
+        questionText: questionTextWithValue(value, qtext),
+        cipherText: formatted,
+        correctAnswer: lettersOnlyAnswer(s)
+      }, latex);
 
       document.getElementById('cipherOutput').innerHTML = "<pre>" + formatted + "</pre>";
       document.getElementById('plainOutput').innerHTML = "<pre>" + s.toUpperCase().replace(/[^A-Z]/g," ") + "</pre>";

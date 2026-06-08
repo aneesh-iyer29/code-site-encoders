@@ -28,6 +28,11 @@
       <input type="number" id="blocksize" value="5" required>
     </label>
 
+    <label>
+      Reveal Keyword (optional):
+      <input type="text" id="revealKeyword">
+    </label>
+
     <button type="submit">Generate</button>
   </form>
 
@@ -48,6 +53,7 @@
     <button onclick="downloadLatex()">Download LaTeX</button>
   </div>
 
+  <script src="embed-output.js"></script>
   <script>
     function atbash(text) {
       const cleanedText = text.toUpperCase().replace(/[^A-Z]/g, '');
@@ -105,15 +111,15 @@
       return result.join("\n");
     }
 
-    function generateCipher() {
+    async function generateCipher() {
       const qtext = document.getElementById('qtext').value;
       const s = document.getElementById('plaintext').value;
       const value = document.getElementById('value').value;
       const bs = parseInt(document.getElementById('blocksize').value) || 5;
+      const revealKeyword = document.getElementById('revealKeyword').value;
 
       // Generate LaTeX
       const latex = atbashEncoder(s, bs, value, qtext);
-      document.getElementById('latexOutput').value = latex;
 
       // Generate Cipher Text for preview
       const cipherText = atbash(s);
@@ -125,6 +131,13 @@
         }
       }
       formattedCipher = formattedCipher.trim();
+      await setLatexOrEmbedOutput("latexOutput", revealKeyword, "aristocrat", {
+        cipherType: "Aristocrat",
+        aristoType: "Atbash",
+        questionText: questionTextWithValue(value, qtext),
+        cipherText: aristoFormatSentence(formattedCipher),
+        correctAnswer: lettersOnlyAnswer(s)
+      }, latex);
       
       const cipherHTML = "<pre>" + aristoFormatSentence(formattedCipher) + "</pre>";
       document.getElementById('cipherOutput').innerHTML = cipherHTML;

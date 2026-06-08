@@ -48,6 +48,11 @@
       <input type="text" id="hint">
     </label>
 
+    <label>
+      Reveal Keyword (optional):
+      <input type="text" id="revealKeyword">
+    </label>
+
     <button type="submit">Generate</button>
   </form>
 
@@ -66,6 +71,7 @@
     <button onclick="downloadLatex()">Download LaTeX</button>
   </div>
 
+  <script src="embed-output.js"></script>
   <script>
     // --- Utility Functions ---
     function fracAlphabet(keyword) {
@@ -141,7 +147,7 @@
       return formatted + line.trim();
     }
 
-    function generateFractionated() {
+    async function generateFractionated() {
       const qtext = document.getElementById("qtext").value;
       const value = document.getElementById("value").value;
       const plaintext = document.getElementById("plaintext").value;
@@ -149,6 +155,7 @@
       const crib = document.getElementById("crib").value;
       const hintType = document.getElementById("hintType").value;
       const hint = document.getElementById("hint").value;
+      const revealKeyword = document.getElementById("revealKeyword").value;
 
       let encoded = fractionatedEncoder(wordBreaker(plaintext), keyword.replace(/ /g,""));
       let formatted = fracFormatSentence(encoded).replace(/ /g,"");
@@ -174,7 +181,23 @@
       latex += "\n\\Large{\n\\begin{verbatim}\n" + pretty + "\n\\end{verbatim}}\n\\vfill\n\\uplevel{\\hrulefill}";
 
       document.getElementById("fracPreview").innerHTML = "<pre>"+pretty+"</pre>";
-      document.getElementById("latexOutput").value = latex;
+      let embedQuestion = qtext;
+      if (hintType === "Start Crib") {
+        embedQuestion += ` You are told the plaintext begins with ${crib}.`;
+      }
+      if (hintType === "Middle Crib") {
+        embedQuestion += ` You are told the plaintext contains ${crib} corresponding to ${hint}.`;
+      }
+      if (hintType === "End Crib") {
+        embedQuestion += ` You are told the plaintext ends with ${crib} and ${hint} Xs of padding.`;
+      }
+      await setLatexOrEmbedOutput("latexOutput", revealKeyword, "fractionatedmorse", {
+        cipherType: "Fractionated Morse",
+        aristoType: "Normal",
+        questionText: questionTextWithValue(value, embedQuestion),
+        cipherText: pretty,
+        correctAnswer: lettersOnlyAnswer(plaintext)
+      }, latex);
     }
 
     function downloadLatex() {

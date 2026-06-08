@@ -58,6 +58,10 @@
       Hint:
       <input type="text" id="hint">
     </label>
+    <label>
+      Reveal Keyword (optional):
+      <input type="text" id="revealKeyword">
+    </label>
     <button type="submit">Generate</button>
   </form>
 
@@ -77,6 +81,7 @@
     <button onclick="downloadLatex()">Download LaTeX</button>
   </div>
 
+  <script src="embed-output.js"></script>
   <script>
     // Baconian mapping
     const baconianMap = {
@@ -243,7 +248,7 @@
       return result.join("\n");
     }
 
-    function generateBaconian() {
+    async function generateBaconian() {
       const qtext = document.getElementById('qtext').value;
       const s = document.getElementById('plaintext').value;
       const a = document.getElementById('setA').value || "abcdefghijklm";
@@ -254,13 +259,29 @@
       const type = document.getElementById('encType').value;
       const hint_type = document.getElementById('hintType').value;
       const hint = document.getElementById('hint').value;
+      const revealKeyword = document.getElementById('revealKeyword').value;
 
       const latex = baconianFormatter(qtext, s, a, b, alph, lw, value, type, hint_type, hint);
-      document.getElementById('latexOutput').value = latex;
 
       let preview = (type === "WORDS")
         ? words(s, alph)
         : baconLetterEncoder(s, a, b, lw, type);
+
+      let embedQuestion = qtext;
+      if (hint_type === "Start Crib") {
+        embedQuestion += ` You are told that the plaintext starts with ${hint}`;
+      } else if (hint_type === "End Crib") {
+        embedQuestion += ` You are told that the plaintext ends with ${hint}`;
+      } else if (hint_type === "Letters" && hint.trim()) {
+        embedQuestion += ` You are told that ${hint}`;
+      }
+      await setLatexOrEmbedOutput("latexOutput", revealKeyword, "baconian", {
+        cipherType: "Baconian",
+        aristoType: "K2",
+        questionText: questionTextWithValue(value, embedQuestion),
+        cipherText: preview,
+        correctAnswer: lettersOnlyAnswer(s)
+      }, latex);
 
       document.getElementById('cipherOutput').innerHTML = "<pre>" + preview + "</pre>";
       document.getElementById('plainOutput').innerHTML = "<pre>" + s.replace(/[^a-zA-Z]/g, '').toUpperCase() + "</pre>";

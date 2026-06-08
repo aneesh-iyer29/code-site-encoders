@@ -42,6 +42,11 @@
     </label>
 
     <label>
+      Reveal Keyword (optional):
+      <input type="text" id="revealKeyword">
+    </label>
+
+    <label>
       Shift:
       <input type="number" id="shift" value="0">
     </label>
@@ -72,6 +77,7 @@
     <button onclick="downloadLatex()">Download LaTeX</button>
   </div>
 
+  <script src="embed-output.js"></script>
   <script>
     function derangement(arr) {
       let result, tries = 0;
@@ -201,23 +207,30 @@
       v += "\\hline\n" + table + "\n\\hline\n\\end{tabular}\n\\end{center}}\n\\vfill\n\\uplevel{\\hrulefill}\n";
       return v;
     }
-    function generateCipher() {
+    async function generateCipher() {
       const qtext = document.getElementById('qtext').value;
       const s = document.getElementById('plaintext').value;
       const value = document.getElementById('value').value;
       const type = document.getElementById('type').value;
       const alph = document.getElementById('alph').value;
       const keyword = document.getElementById('keyword').value;
+      const revealKeyword = document.getElementById('revealKeyword').value;
       const shift = parseInt(document.getElementById('shift').value) || 0;
       const extract = document.getElementById('extract').checked;
 
       // Generate LaTeX
       const latex = monoalphCreator(qtext, s, value, type, alph, keyword, shift, extract);
-      document.getElementById('latexOutput').value = latex;
 
       // Generate Cipher Text
       let replaced = aristoLetterReplacement(s, keyword, shift, alph);
       let formatted = type === "Aristocrat" ? aristoFormatSentence(replaced) : patFormatSentence(replaced.replace(/[^a-zA-Z]/g, ""));
+      await setLatexOrEmbedOutput("latexOutput", revealKeyword, "aristocrat", {
+        cipherType: "Aristocrat",
+        aristoType: alph || "Normal",
+        questionText: questionTextWithValue(value, qtext),
+        cipherText: formatted,
+        correctAnswer: type === "Aristocrat" ? s.toUpperCase() : lettersOnlyAnswer(s)
+      }, latex);
       
       // Insert into preview
       let cipherHTML = "<pre>" + formatted + "</pre>";
